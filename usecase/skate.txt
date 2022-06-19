@@ -50,6 +50,4 @@ MUSIC skatersWaltz {
     theme2;
     = (ADBE) | . (G+#BD+) | (A+E+C+#) ;
     = (A-EA) | . | . ;
-    = . | . | .;
-
 }

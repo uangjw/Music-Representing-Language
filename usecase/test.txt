@@ -5,10 +5,17 @@ VELOCITY: 1;    //strong
 TEMPO: 3;
 
 SEGMENT seg{
-    = C | E| G;
+    = C | E | G ;
 }
 
 MUSIC test{
+    int i : 0;
+    if (i == 0) {
+        = D | F | A ;
+    }
+    else {
+        = E | G | C ;
+    }
     seg;
     seg;
     seg;

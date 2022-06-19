@@ -20,6 +20,11 @@ MUSIC oldMcdonald {
     = E+ | E- | E+ | E- ;
     = E+ | E+ | B | C+# ;
 
+    = E+ | E+ | A- | . ;
+    = E+ | E+ | A- | . ;
+    = E+ | A- | E+ | A- ;
+    = E+ | E+ | B | C+# ;
+
     = (E+E-) | E+ | (E+B-) | B ;
     = (C+#E-) | C#+ | (BB-) | B ;
     = (G+#A-) | G#+ | (F+#BF#) | F+# ;
