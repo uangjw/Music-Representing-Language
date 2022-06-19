@@ -1,0 +1,693 @@
+import java_cup.runtime.*;
+import exceptions.*;
+import java.io.*;
+import java.util.*;
+import write_midi.*;
+
+parser code {:
+    public MidiWriter mw;
+    public String name_of_music;
+    public int bpm, cur_ins, cur_oct, strength, tempo;
+
+    public Boolean condition;
+    public Boolean buffering;
+
+    public HashMap<String, Integer> seg_map;
+    public HashMap<String, Integer> int_map;
+
+    public ArrayList<ArrayList<Note>> seg_notes;
+    public ArrayList<ArrayList<ArrayList<Note>>> seg_chords;
+    public ArrayList<ArrayList<Float>> seg_durations;
+    
+    public Note buf_note;
+    public ArrayList<Note> beat_notes;
+    public ArrayList<Note> chord_notes;
+    public ArrayList<ArrayList<Note>> beat_chords;
+
+    public Note last_note;
+    public ArrayList<Note> last_chord;
+    public int last_note_on_tick;
+    public int last_chord_on_tick;
+    public float last_note_duration;
+    public float last_chord_duration;
+:}
+
+init with {: 
+    int_map = new HashMap<String, Integer>();
+    seg_map = new HashMap<String, Integer>();
+    beat_notes = new ArrayList<Note>();
+    chord_notes = new ArrayList<Note>();
+    beat_chords = new ArrayList<ArrayList<Note>>();
+
+    seg_notes = new ArrayList<ArrayList<Note>>();
+    seg_chords = new ArrayList<ArrayList<ArrayList<Note>>>();
+    seg_durations = new ArrayList<ArrayList<Float>>();
+
+    condition = true;
+    buffering = false;
+:};
+
+scan with {: 
+    return getScanner().next_token();
+:};
+
+
+terminal MUSIC;
+terminal BPM, INSTR, CUROC, VELOC, TEMPO;
+terminal INT, SEGMENT;
+terminal SETOCT;
+terminal IF, ELSE;
+terminal TIMES, DIVIDE, EQUIV, GREAT, LESS, GEQ, LEQ, NEQ;
+terminal SEMI, BAR, EQUAL, COLON, PLUS, MINUS, SHARP, LCURLY, RCURLY, DOT, PERCENT, LPAREN, RPAREN;
+terminal String NOTENAME;
+terminal String IDENTIFIER;
+terminal String INTEGER;
+
+non terminal bpm_config, ins_config, curoc_config, veloc_config, tempo_config, config_statement;
+non terminal section;
+non terminal note, sound, chord_part;
+non terminal chord;
+non terminal beat, sec_end;
+non terminal Integer sec_part;
+non terminal String note_postfix, note_postfixes;
+non terminal declaration, assignment, statement, if_statement, if_head, if_part, else_head, else_part;
+non terminal set_octave;
+non terminal Integer int_expr;
+non terminal Boolean bool_expr;
+non terminal music_part, music, mrl_file_part, mrl_file;
+non terminal segment, segment_part, seg_call;
+
+precedence left SEMI;
+precedence left BAR;
+precedence right EQUAL;
+precedence right COLON;
+precedence left PLUS;
+precedence left MINUS;
+precedence left TIMES, DIVIDE;
+precedence left EQUIV, GREAT, LESS, GEQ, LEQ, NEQ;
+precedence left SHARP;
+precedence left LCURLY;
+
+
+mrl_file ::= mrl_file_part music {:
+    System.out.println("reducing to mrl_file");
+    parser.mw.writeMidiFile("../result/" + name_of_music + ".mid");
+:};
+
+
+mrl_file_part ::= mrl_file_part segment {:
+    System.out.println("reducing to mrl_file_part");
+:} | config_statement {:
+    System.out.println("reducing to mrl_file_part");
+:};
+
+
+config_statement ::= bpm_config SEMI ins_config SEMI curoc_config SEMI veloc_config SEMI tempo_config SEMI{:
+    System.out.println("reducing to config_statement");
+    parser.mw = new MidiWriter(parser.bpm, parser.cur_oct, parser.cur_ins, parser.strength);
+:};
+
+
+bpm_config ::= BPM COLON INTEGER:n{:
+    System.out.println("reducing to bpm_config");
+    parser.bpm = Integer.valueOf(n);
+:};
+
+
+ins_config ::= INSTR COLON INTEGER:n{:
+    System.out.println("reducing to ins_config");
+    parser.cur_ins = Integer.valueOf(n);
+:};
+
+
+curoc_config ::= CUROC COLON INTEGER:n{:
+    System.out.println("reducing to curoc_config");
+    parser.cur_oct = Integer.valueOf(n);
+:};
+
+
+veloc_config ::= VELOC COLON INTEGER:n{:
+    System.out.println("reducing to veloc_config");
+    parser.strength = Integer.valueOf(n);
+:};
+
+
+tempo_config ::= TEMPO COLON INTEGER:n{:
+    System.out.println("reducing to tempo_config");
+    parser.tempo = Integer.valueOf(n);
+:};
+
+
+segment ::= segment_part RCURLY {:
+    System.out.println("reducing to segment");
+    parser.buffering = false;
+:};
+
+
+segment_part ::= segment_part section | SEGMENT IDENTIFIER:str LCURLY {:
+    System.out.println("reducing to segment_part");
+    parser.buffering = true;
+    seg_map.put(str.toString(), seg_notes.size());
+    seg_notes.add(new ArrayList<Note>());
+    seg_chords.add(new ArrayList<ArrayList<Note>>());
+    seg_durations.add(new ArrayList<Float>());
+:};
+
+
+music ::= music_part RCURLY {:
+    System.out.println("reducing to music");
+:};
+
+
+music_part ::= music_part section {:
+    System.out.println("reducing to music_part");
+:} | music_part statement {:
+    System.out.println("reducing to music_part");
+:} | MUSIC IDENTIFIER:str LCURLY {:
+    System.out.println("reducing to music_part");
+    parser.name_of_music = str;
+:};
+
+
+statement ::= declaration {:
+    System.out.println("reducing to statement");
+:} | assignment {:
+    System.out.println("reducing to statement");
+:} | if_statement {:
+    System.out.println("reducing to statement");
+:} | set_octave {:
+    System.out.println("reducing to statement");
+:} | seg_call {:
+    System.out.println("reducing to statement");
+:};
+
+
+seg_call ::= IDENTIFIER:id SEMI {:
+    System.out.println("reducing to seg_call");
+    if (seg_map.containsKey(id.toString())) {
+        int i = seg_map.get(id.toString());
+        parser.mw.addSequence(seg_notes.get(i), new ArrayList<ArrayList<Note>>(seg_chords.get(i)), seg_durations.get(i));
+    }
+    else {
+        throw new InvalidIdentifierException(id.toString());
+    }
+:};
+
+
+set_octave ::= SETOCT LPAREN INTEGER:n RPAREN SEMI {:
+    System.out.println("reducing to set_octave");
+    parser.cur_oct = Integer.valueOf(n);
+:};
+
+
+declaration ::= INT IDENTIFIER:id COLON int_expr:n SEMI {:
+    System.out.println("reducing to declaration");
+    int_map.put(id.toString(), n.intValue());
+:};
+
+assignment ::= IDENTIFIER:id COLON int_expr:n SEMI {:
+    System.out.println("reducing to assignment");
+    if (int_map.containsKey(id.toString())) {
+        int_map.replace(id.toString(), n.intValue());
+    }
+    else {
+        throw new InvalidIdentifierException(id.toString());
+    }
+:};
+
+
+if_statement ::= if_part RCURLY else_part RCURLY {:
+    System.out.println("reducing to if_statement");
+    parser.condition = true;
+:} | if_part RCURLY {:
+    System.out.println("reducing to if_statement");
+    parser.condition = true;
+:};
+
+
+if_part ::= if_part section {:
+    System.out.println("reducing to if_part");
+:} | if_head section {:
+    System.out.println("reducing to if_part");
+:} | if_part statement {:
+    System.out.println("reducing to if_part");
+:} | if_head statement {:
+    System.out.println("reducing to if_part");
+:};
+
+
+if_head ::= IF LPAREN bool_expr:b RPAREN LCURLY {:
+    System.out.println("reducing to if_head");
+    if (!b) {
+        parser.condition = false;
+    }
+:};
+
+
+else_part ::= else_part section {:
+    System.out.println("reducing to else_part");
+:} | else_head section {:
+    System.out.println("reducing to else_part");
+:} | else_part statement{:
+    System.out.println("reducing to else_part");
+:} | else_head statement{:
+    System.out.println("reducing to else_part");
+:};
+
+
+else_head ::= ELSE LCURLY {:
+    System.out.println("reducing to else_head");
+    parser.condition = !parser.condition;
+:};
+
+
+int_expr ::= int_expr:n1 PLUS int_expr:n2 {:
+    System.out.println("reducing to int_expr");
+    RESULT = n1.intValue() + n2.intValue();
+:} | int_expr:n1 MINUS int_expr:n2 {:
+    System.out.println("reducing to int_expr");
+    RESULT = n1.intValue() - n2.intValue();
+:} | int_expr:n1 TIMES int_expr:n2 {:
+    System.out.println("reducing to int_expr");
+    RESULT = n1.intValue() * n2.intValue();
+:} | int_expr:n1 DIVIDE int_expr:n2 {:
+    System.out.println("reducing to int_expr");
+    RESULT = n1.intValue() / n2.intValue();
+:} | LPAREN int_expr:n RPAREN {:
+    System.out.println("reducing to int_expr");
+    RESULT = n.intValue();
+:} | IDENTIFIER:id {:
+    System.out.println("reducing to int_expr");
+    if (int_map.containsKey(id.toString())) {
+        RESULT = int_map.get(id.toString());
+    }
+    else {
+        throw new InvalidIdentifierException(id.toString());
+    }
+:} | INTEGER:n {:
+    System.out.println("reducing to int_expr");
+    RESULT = Integer.valueOf(n);
+:};
+
+
+bool_expr ::= int_expr:n1 EQUIV int_expr:n2 {:
+    System.out.println("reducing to bool_expr");
+    RESULT = (n1.intValue() == n2.intValue());
+:} | int_expr:n1 GREAT int_expr:n2 {:
+    System.out.println("reducing to bool_expr");
+    RESULT = (n1.intValue() > n2.intValue());
+:} | int_expr:n1 LESS int_expr:n2 {:
+    System.out.println("reducing to bool_expr");
+    RESULT = (n1.intValue() < n2.intValue());
+:} | int_expr:n1 GEQ int_expr:n2 {:
+    System.out.println("reducing to bool_expr");
+    RESULT = (n1.intValue() >= n2.intValue());
+:} | int_expr:n1 LEQ int_expr:n2 {:
+    System.out.println("reducing to bool_expr");
+    RESULT = (n1.intValue() <= n2.intValue());
+:} | int_expr:n1 NEQ int_expr:n2 {:
+    System.out.println("reducing to bool_expr");
+    RESULT = (n1.intValue() != n2.intValue());
+:};
+
+
+
+section ::= sec_part:n sec_end {:
+    if (Integer.valueOf(n) == tempo - 1) {
+        System.out.println("reducing to section");
+    }
+    else {
+        throw new TempoMismatchedException();
+    }
+:};
+
+
+sec_part ::= sec_part:x beat BAR {:
+    RESULT = x.intValue() + 1;
+    System.out.println("reducing to sec_part");
+    int n = parser.beat_notes.size();
+    if (parser.condition) {
+    for(int j = 0; j < n; j++) {
+        Note cur_note = parser.beat_notes.get(j);
+        int rel_duration = 1;
+        if (cur_note.isNote()) {
+            int k = 1;
+            while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                rel_duration += 1;
+                k += 1;
+            }
+            j += k - 1;
+            last_note = cur_note;
+            last_note_on_tick = parser.mw.getLastTick();
+            last_note_duration = (float)rel_duration / n;
+            if (!parser.buffering) {
+                parser.mw.addNote(cur_note, (float)rel_duration / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(cur_note);
+                seg_durations.get(seg_durations.size() - 1).add((float)rel_duration / n);
+            }
+        }
+        else if (cur_note.isRest()) {
+            last_note = new Note(false, true);
+            if (!parser.buffering) {
+                parser.mw.addRest((float)1 / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(new Note(false, true));
+                seg_durations.get(seg_durations.size() - 1).add((float)1 / n);
+            }
+        }
+        else if (cur_note.isContinue()) {
+            if (last_note.isRest()) {
+                throw new NoteContinueException();
+            }
+            else {
+                int k = 1;
+                int cont_rel_duration = 1;
+                while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                    cont_rel_duration += 1;
+                    k += 1;
+                }
+                j += k - 1;
+                if (last_note_on_tick > last_chord_on_tick) {
+                    last_note_duration += (float)cont_rel_duration / n;
+                    if (!parser.buffering) {
+                        parser.mw.addNote(last_note, last_note_duration, last_note_on_tick);
+                    }
+                    else {
+                        int s1 = seg_durations.size();
+                        int s2 = seg_durations.get(s1).size();
+                        seg_durations.get(s1).set(s2, last_note_duration);
+                    }
+                }
+                else {
+                    last_chord_duration += (float)cont_rel_duration / n;
+                    if (!parser.buffering) {
+                        parser.mw.addChord(last_chord, last_chord_duration, last_chord_on_tick);
+                    }
+                    else {
+                        int s1 = seg_durations.size();
+                        int s2 = seg_durations.get(s1).size();
+                        seg_durations.get(s1).set(s2, last_chord_duration);
+                    }
+                }
+            }
+        }
+        else if (cur_note.isNull()) {
+            int k = 1;
+            while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                rel_duration += 1;
+                k += 1;
+            }
+            j += k - 1;
+            last_chord = beat_chords.get(0);
+            beat_chords.remove(0);
+            last_chord_on_tick = parser.mw.getLastTick();
+            last_chord_duration = (float)rel_duration / n;
+            if (!parser.buffering) {
+                parser.mw.addChord(last_chord, (float)rel_duration / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(new Note());
+                seg_chords.get(seg_chords.size() - 1).add(new ArrayList<Note>(last_chord));
+                seg_durations.get(seg_notes.size() - 1).add((float)rel_duration / n);
+            }
+        }
+    }
+    }
+    parser.beat_notes.clear();
+:} | EQUAL beat BAR {:
+    RESULT = (int)1;
+    System.out.println("reducing to sec_part");
+    int n = parser.beat_notes.size();
+    if (parser.condition) {
+    for(int j = 0; j < n; j++) {
+        Note cur_note = parser.beat_notes.get(j);
+        int rel_duration = 1;
+        if (cur_note.isNote()) {
+            int k = 1;
+            while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                rel_duration += 1;
+                k += 1;
+            }
+            j += k - 1;
+            last_note = cur_note;
+            last_note_on_tick = parser.mw.getLastTick();
+            last_note_duration = (float)rel_duration / n;
+            if (!parser.buffering) {
+                parser.mw.addNote(cur_note, (float)rel_duration / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(cur_note);
+                seg_durations.get(seg_durations.size() - 1).add((float)rel_duration / n);
+            }
+        }
+        else if (cur_note.isRest()) {
+            last_note = new Note(false, true);
+            if (!parser.buffering) {
+                parser.mw.addRest((float)1 / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(new Note(false, true));
+                seg_durations.get(seg_durations.size() - 1).add((float)1 / n);
+            }
+        }
+        else if (cur_note.isContinue()) {
+            if (last_note.isRest()) {
+                throw new NoteContinueException();
+            }
+            else {
+                int k = 1;
+                int cont_rel_duration = 1;
+                while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                    cont_rel_duration += 1;
+                    k += 1;
+                }
+                j += k - 1;
+                if (last_note_on_tick > last_chord_on_tick) {
+                    last_note_duration += (float)cont_rel_duration / n;
+                    if (!parser.buffering) {
+                        parser.mw.addNote(last_note, last_note_duration, last_note_on_tick);
+                    }
+                    else {
+                        int s1 = seg_durations.size();
+                        int s2 = seg_durations.get(s1).size();
+                        seg_durations.get(s1).set(s2, last_note_duration);
+                    }
+                }
+                else {
+                    last_chord_duration += (float)cont_rel_duration / n;
+                    if (!parser.buffering) {
+                        parser.mw.addChord(last_chord, last_chord_duration, last_chord_on_tick);
+                    }
+                    else {
+                        int s1 = seg_durations.size();
+                        int s2 = seg_durations.get(s1).size();
+                        seg_durations.get(s1).set(s2, last_chord_duration);
+                    }
+                }
+            }
+        }
+        else if (cur_note.isNull()) {
+            int k = 1;
+            while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                rel_duration += 1;
+                k += 1;
+            }
+            j += k - 1;
+            last_chord = beat_chords.get(0);
+            beat_chords.remove(0);
+            last_chord_on_tick = parser.mw.getLastTick();
+            last_chord_duration = (float)rel_duration / n;
+            if (!parser.buffering) {
+                parser.mw.addChord(last_chord, (float)rel_duration / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(new Note());
+                seg_chords.get(seg_chords.size() - 1).add(new ArrayList<Note>(last_chord));
+                seg_durations.get(seg_notes.size() - 1).add((float)rel_duration / n);
+            }
+        }
+    }
+    }
+    parser.beat_notes.clear();
+:};
+
+
+sec_end ::= beat SEMI{:
+    System.out.println("reducing to sec_end");
+    int n = parser.beat_notes.size();
+    if (parser.condition) {
+        for(int j = 0; j < n; j++) {
+        Note cur_note = parser.beat_notes.get(j);
+        int rel_duration = 1;
+        if (cur_note.isNote()) {
+            int k = 1;
+            while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                rel_duration += 1;
+                k += 1;
+            }
+            j += k - 1;
+            last_note = cur_note;
+            last_note_on_tick = parser.mw.getLastTick();
+            last_note_duration = (float)rel_duration / n;
+            if (!parser.buffering) {
+                parser.mw.addNote(cur_note, (float)rel_duration / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(cur_note);
+                seg_durations.get(seg_durations.size() - 1).add((float)rel_duration / n);
+            }
+        }
+        else if (cur_note.isRest()) {
+            last_note = new Note(false, true);
+            if (!parser.buffering) {
+                parser.mw.addRest((float)1 / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(new Note(false, true));
+                seg_durations.get(seg_durations.size() - 1).add((float)1 / n);
+            }
+        }
+        else if (cur_note.isContinue()) {
+            if (last_note.isRest()) {
+                throw new NoteContinueException();
+            }
+            else {
+                int k = 1;
+                int cont_rel_duration = 1;
+                while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                    cont_rel_duration += 1;
+                    k += 1;
+                }
+                j += k - 1;
+                if (last_note_on_tick > last_chord_on_tick) {
+                    last_note_duration += (float)cont_rel_duration / n;
+                    if (!parser.buffering) {
+                        parser.mw.addNote(last_note, last_note_duration, last_note_on_tick);
+                    }
+                    else {
+                        int s1 = seg_durations.size();
+                        int s2 = seg_durations.get(s1).size();
+                        seg_durations.get(s1).set(s2, last_note_duration);
+                    }
+                }
+                else {
+                    last_chord_duration += (float)cont_rel_duration / n;
+                    if (!parser.buffering) {
+                        parser.mw.addChord(last_chord, last_chord_duration, last_chord_on_tick);
+                    }
+                    else {
+                        int s1 = seg_durations.size();
+                        int s2 = seg_durations.get(s1).size();
+                        seg_durations.get(s1).set(s2, last_chord_duration);
+                    }
+                }
+            }
+        }
+        else if (cur_note.isNull()) {
+            int k = 1;
+            while ((j + k < n) && parser.beat_notes.get(j+k).isContinue()) {
+                rel_duration += 1;
+                k += 1;
+            }
+            j += k - 1;
+            last_chord = beat_chords.get(0);
+            beat_chords.remove(0);
+            last_chord_on_tick = parser.mw.getLastTick();
+            last_chord_duration = (float)rel_duration / n;
+            if (!parser.buffering) {
+                parser.mw.addChord(last_chord, (float)rel_duration / n);
+            }
+            else {
+                seg_notes.get(seg_notes.size() - 1).add(new Note());
+                seg_chords.get(seg_chords.size() - 1).add(new ArrayList<Note>(last_chord));
+                seg_durations.get(seg_notes.size() - 1).add((float)rel_duration / n);
+            }
+        }
+    }
+    }
+    parser.beat_notes.clear();
+:};
+
+
+beat ::= beat sound {:
+    System.out.println("reducing to beat");
+:} | sound {:
+    System.out.println("reducing to beat");
+:};
+
+
+sound ::= note {:
+    System.out.println("reducing to sound");
+    parser.beat_notes.add(parser.buf_note);
+:} | chord {:
+    System.out.println("reducing to sound");
+    parser.beat_notes.add(new Note());
+:}| DOT {:
+    System.out.println("reducing to sound");
+    parser.beat_notes.add(new Note(true, false));
+:} | PERCENT {:
+    System.out.println("reducing to sound");
+    parser.beat_notes.add(new Note(false, true));
+:};
+
+
+chord ::= chord_part RPAREN {:
+    System.out.println("reducing to chord");
+    parser.beat_chords.add(new ArrayList<Note>(parser.chord_notes));
+    parser.chord_notes.clear();
+:};
+
+
+chord_part ::= chord_part note {:
+    System.out.println("reducing to chord_part");
+    parser.chord_notes.add(parser.buf_note);
+:} | LPAREN note {:
+    System.out.println("reducing to chord_part");
+    parser.chord_notes.add(parser.buf_note);
+:};
+
+
+note_postfix ::= PLUS{:
+    System.out.println("reducing to note_postfix");
+    RESULT = new String("+");
+:} | MINUS{:
+    System.out.println("reducing to note_postfix");
+    RESULT = new String("-");
+:} | SHARP{:
+    System.out.println("reducing to note_postfix");
+    RESULT = new String("#");
+:};
+
+
+note_postfixes ::= note_postfixes:pf2 note_postfix:pf3{:
+    System.out.println("reducing to note_postfixes");
+    RESULT = pf2.toString() + pf3.toString();
+:} | note_postfix:pf1{:
+    System.out.println("reducing to note_postfixes");
+    RESULT = pf1.toString();
+:};
+
+
+note ::= NOTENAME:x note_postfixes:pf{:
+    System.out.println("reducing to note");
+    int note_oct = parser.cur_oct;
+    boolean sharp = false;
+    for (int i = 0; i < pf.length(); i++) {
+        if (pf.charAt(i) == '+') {
+            note_oct += 1;
+        }
+        else if (pf.charAt(i) == '-') {
+            note_oct -= 1;
+        }
+        else if (pf.charAt(i) == '#') {
+            sharp = !sharp;
+        }
+    }
+    parser.buf_note = new Note(x.toString(), note_oct, sharp);
+:} | NOTENAME:y {:
+    System.out.println("reducing to note");
+    parser.buf_note = new Note(y.toString(), parser.cur_oct, false);
+:};

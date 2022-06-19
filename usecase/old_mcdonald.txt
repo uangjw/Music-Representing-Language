@@ -1,0 +1,27 @@
+BPM: 150;
+INSTRUMENT: 0;  //Acoustic guitar(steel)
+CUR_OCTAVE: 3;
+VELOCITY: 1;
+TEMPO: 4;
+
+MUSIC oldMcdonald {
+    = (E+E-) | E+ | E+ | B ;
+    = (C+#E-) | C#+ | B | . ;
+    = (G+#A-) | G#+ | (F+#B) | F#+ ;
+    = E+ | B- | C# | D# ;
+
+    = (E+E-) | E+ | (E+B) | B ;
+    = (C+#E-) | C+# | (BB-) | B ;
+    = (G+#A-) | G#+ | (F+#B) | F#+ ;
+    = E+ | E- | B | C+# ;
+    
+    = E+ | E+ | E- | . ;
+    = E+ | E+ | E- | . ;
+    = E+ | E- | E+ | E- ;
+    = E+ | E+ | B | C+# ;
+
+    = (E+E-) | E+ | (E+B-) | B ;
+    = (C+#E-) | C#+ | (BB-) | B ;
+    = (G+#A-) | G#+ | (F+#BF#) | F+# ;
+    = (E+E-) | . | . | . ;
+}

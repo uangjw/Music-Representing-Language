@@ -1,0 +1,55 @@
+BPM: 192;
+INSTRUMENT: 0;  //Acoustic grand piano
+CUR_OCTAVE: 3;
+VELOCITY: 1;    //strong
+TEMPO: 3;
+
+SEGMENT theme1{
+    = (C+#A-) | E | E ;
+    = (A-E+) | E | (F+#E) ;
+    = (A-F+#) | D | D ;
+    = A- | D | D ;
+    = (A-D+) | F# | F# ;
+    = (A-F+#) | F# | (G+#F#) ;
+    = (G-#G+#) | E | E ;
+    = G-# | E | E ;
+    = (F-#B+) | B- | B- ;
+    = (A-A+) | E | (EC+#) ;
+    = (A-E+) | E | E ;
+    = (B-D+) | E | (EC+#) ;
+    = (A-C+#) | E | E ;
+    = (B-B) | E | E ;
+    = (A-A) | E | C# ;
+    = A- | EA+ | F+#A+ ;
+}
+
+SEGMENT theme2{
+    = (C#E+)A+ | (F+#E)A+ | (E+E)A+ ;
+    = (C#F+#)A+ | (E+E)A+ | (F+#E)A+ ;
+    = (E+A-) | (G+#E) | (G+#E) ;
+    = (E+G-#) | (G+#E) | (G+#E) ;
+    = (E+B-)B+ | (F+#E)B+ | (E+E)B+ ;
+    = (F+#B-)B+ | (E+E)B+ | (F+#E)B+ ;
+    = (E+A-) | (EA+) | (EA+) ;
+    = (A-E+) | (EA+) | (EA+) ;
+    = (EE+)A+ | (G+#A-)A+ | (E+C#)A+ ;
+    = (A-E+)A+ | (G+C#)A+ | (EE+)A+ ;
+    = (A-D+)A+ | (F+#D)A+ | (F#D+)A+ ;
+    = (A-D+)A+ | (F+D)A+ | (F#D+)A+ ;
+    = (A-C+#)A+ | (EE+)A+ | C+A+ ;
+    = (B-D+)G+# | (EE+)G+# | D+G+# ;
+}
+
+MUSIC skatersWaltz {
+    theme1;
+    theme2;
+    = (EA+) | . | (C#G+#) ;
+    = (A+E)D | C#B- | A- ;
+
+    theme1;
+    theme2;
+    = (ADBE) | . (G+#BD+) | (A+E+C+#) ;
+    = (A-EA) | . | . ;
+    = . | . | .;
+
+}

@@ -1,0 +1,43 @@
+BPM: 120;
+INSTRUMENT: 0;  //Acoustic grand piano
+CUR_OCTAVE: 3;
+VELOCITY: 1;    //strong
+TEMPO: 4;
+
+MUSIC wedding {
+    = % | % | % | CCC;
+    = C | . | . | CCC;
+    = C | . | . | CCC;
+    = (CE) | EEE | (CE) | EEE;
+    = (CEG) | GGG | (CEG) | (CE);
+    = (A-C+F+#C++) | C+ | (B-D+#F+#B+) | .F+#;
+    = (E-GBG+) | GG+ | (DAD+F+) | (AD);
+    = C+D+C+C+. | (G-EGC+) | (B-FGD+) | GD+;
+    = (CGC+E+) | CE | GC+| E+G+;
+    = (A-C+F+#C++) | C+ | (B-D#+F+#B+) | .F+#;
+    = (E-GBG+) | GG+ | (DAD+F+) | (FAD+);
+    = C+D+C+C+. | (G-EGC+) | (CGC+E+) | D+E+;
+    = (B-FGD+) | F | (CEGC+) | CCC;
+    = C | CEG | C+ | CCC;
+    = C | EGC+ | E+ | CCC;
+    = C | EGC+ | E+ | GC+E+;
+    = (CG+) | GC+E+ | G+ | C+E+G+;
+    = (CEGC+) | E | (CEGC+) | .C+;
+    = (G-DC+E+) | D+ | (G-FGB) | G;
+    = (CEG) | .C+ | (EGC+) | .E+;
+    = (G-DC+E+) | D+ | (G-FGB) | G;
+    = (CEG) | .C+ | (EGC+) | .G+;
+    = (FAC+G+) | A | (FAC+F+) | .E+;
+    = (F-AD+) | C+#E+ | (AD+) | AC+;
+    = (G-DGB) | (GG+) | (AA+) | (BB+);
+    = (A-C+F+#C++) | C+ | (B-D#+F+#B+) | .F+#;
+    = (E-GBG+) | GG+ | (DAD+F+) | (EAD+);
+    = C+D+C+C+.| (G-EGC+) | (B-FGD+) | GD+;
+    = (CGC+E+) | CE | GC+ | E+G+;
+    = (A-C+F+#C++) | C+ | (BD+#F+#B+) | .F+#;
+    = (E-GBG+) | GG+ | (DAD+F+) | (FAD+);
+    = (G-EGC+) | . | (CGC+E+) | D+E+;
+    = (B-FGD+) | . | (CEGC+) | . ;
+    = . | . | . | .;
+
+}

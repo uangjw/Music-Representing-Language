@@ -1,0 +1,16 @@
+BPM: 120;
+INSTRUMENT: 0;     //Acoustic guitar(steel)
+CUR_OCTAVE: 3;
+VELOCITY: 1;
+TEMPO: 4;
+
+MUSIC bunny {
+    = (DD+) | G+E+ | (B-D+) | (DD+) ;
+    = BD+ | E+G+ | (D+B-)E | (DD+)D+ ;
+    = (EE+) | D+B | AB | (A-A)A ;
+    = (B-B) | D+B | AB | G ;
+    = E+D+ | E+D+ | E+D+ | E+D+ ;
+    = BB- | E+E | (DD+)D+ | (DD+)D+ ;
+    = D+D+ | BA | GB | D+G ;
+    = GG | AB | (G-G) |GG ;
+}

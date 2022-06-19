@@ -1,0 +1,15 @@
+BPM: 192;
+INSTRUMENT: 0;  //Acoustic grand piano
+CUR_OCTAVE: 3;
+VELOCITY: 1;    //strong
+TEMPO: 3;
+
+SEGMENT seg{
+    = C | E| G;
+}
+
+MUSIC test{
+    seg;
+    seg;
+    seg;
+}
