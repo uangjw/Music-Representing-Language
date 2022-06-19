@@ -1,5 +1,8 @@
 package exceptions;
 
+/**
+ * 词法分析异常
+ */
 public class LexicalException extends MrlException{
     public LexicalException(int line, int column, String str) {
 		super(line, column);

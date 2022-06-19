@@ -1,5 +1,8 @@
 package exceptions;
 
+/**
+ * Mrl词法分析、语法分析以及翻译生成过程中的异常
+ */
 public class MrlException extends Exception {
     protected int line = -1;
 	protected int column = -1;

@@ -1,5 +1,8 @@
 package exceptions;
 
+/**
+ * 无效标识符异常
+ */
 public class InvalidIdentifierException extends MrlException {
     String id;
 
