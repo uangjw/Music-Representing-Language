@@ -5,7 +5,7 @@ VELOCITY: 1;    //strong
 TEMPO: 3;
 
 SEGMENT seg{
-    = C | E | G ;
+    = C## | E## | G## ;
 }
 
 MUSIC test{

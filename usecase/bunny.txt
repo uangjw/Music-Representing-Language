@@ -1,5 +1,5 @@
 BPM: 120;
-INSTRUMENT: 0;     //Acoustic guitar(steel)
+INSTRUMENT: 25;     //Acoustic guitar(steel)
 CUR_OCTAVE: 3;
 VELOCITY: 1;
 TEMPO: 4;
