@@ -11,7 +11,7 @@ Several complied and generated results of mrl codes in `usecase` are provided al
 4. Run `run.bat` to generate midi music with the txt files in `usecase`. Modify `run.bat` to use different mrl source code. 
 5. Use any midi player to play the results!
 
-To write your own mrl file, please refer to MusicRepresentingLanguage.pdf and write your mrl code with appropriate grammar.
+To write your own mrl file, please refer to MusicRepresentingLanguage.pdf and write your mrl code with correct grammar.
 
 ## TODO
 
